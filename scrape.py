@@ -9,6 +9,8 @@ from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException
+import string
+
 
 
 class content_finished_loading(object):
@@ -98,7 +100,9 @@ $$\   $$ |$$ |      $$ |     $$  __$$ |$$ |  $$ |$$   ____|$$ |
             # Intialize Selenium browser driver
             opts = ChromeOptions()
             opts.add_argument("--window-size=1600,900")
-            driver = webdriver.Chrome(options=opts)
+            #driver = webdriver.Chrome(options=opts)
+            driver = webdriver.Chrome("/home/kali/roppers-thinkific-scraper/chromedriver")
+
             driver.implicitly_wait(1)
             driver.get(course_url)
 
@@ -139,11 +143,19 @@ $$\   $$ |$$ |      $$ |     $$  __$$ |$$ |  $$ |$$   ____|$$ |
 
             # Navigate lessons by chapter and save source files
             chapter_divs = driver.find_elements(By.CSS_SELECTOR, 'div[class="course-player__chapters-menu "] > div')
-
+            path = Path('./'+save_dir+'/')
+            path.mkdir(parents=True, exist_ok=True)
+            file0 = open(save_dir+"/SUMMARY.md","w")
+            file0.write("# Summary\n\n")
+            file1 = open(save_dir+"/index.html","w")
+            file1.write("<h1> Summary </h1>")
             for div in chapter_divs:
                 chapter_title = div.find_element(By.TAG_NAME, "h2").text
                 print(f"[!] {chapter_title}")
+                file0.write("\n## "+chapter_title +"\n\n")
+                file1.write("<h2> "+chapter_title +"</h2>")
 
+                chapter_title_stripped = chapter_title.replace(' ', '')
                 # Expand chapter if needed
                 expand_toggle = div.find_element(By.CSS_SELECTOR, 'span:nth-last-child(1)')
 
@@ -157,23 +169,36 @@ $$\   $$ |$$ |      $$ |     $$  __$$ |$$ |  $$ |$$   ____|$$ |
 
                 # TODO: replace time.sleep with appropriate Wait
                 time.sleep(0.1) # delay to ensure lesson li tags are loaded
-
+                moduleCount = 0
                 for li in lesson_lis:
                     anchor = li.find_element(By.CSS_SELECTOR, "a")
                     href = anchor.get_attribute("href")
 
                     title = anchor.find_element(By.CSS_SELECTOR, "div:nth-last-child(1)").text.split('\n')[0].strip()
+                    for char in string.punctuation:
+                        title = title.replace(char, '')
+                    titleStripped = title.replace(' ', '')
+                    combined_title = str(moduleCount)+"-"+titleStripped
+                    file0.write("* ["+title+"]("+chapter_title_stripped+"/"+combined_title+".md)\n")
+                    file1.write("<p> <a href= "+chapter_title_stripped+"/"+combined_title +".html>" +title + "</a> </p>")
+
+                    
+                    moduleCount+=1
+
                     print(f"  - {title} => {href}")
 
                     wait.until(EC.element_to_be_clickable(li))
                     li.click() # open lesson content
                     
                     # Wait until lesson content is loaded
-                    main_content = driver.find_element(By.ID, "content-inner")
+                    #main_content = driver.find_element(By.ID, "content-inner")
+                    main_content = driver.find_element(By.CLASS_NAME, "fr-view")
+
                     wait.until(content_finished_loading(main_content))
                     
                     html = main_content.get_attribute("innerHTML")
-                    save_lesson_as_html(save_dir, chapter_title, title, '\n'.join([x.strip() for x in html.split('\n')]))
+
+                    save_lesson_as_html(save_dir, chapter_title_stripped, combined_title, '\n'.join([x.strip() for x in html.split('\n')]))
 
             driver.close
         except KeyboardInterrupt:
