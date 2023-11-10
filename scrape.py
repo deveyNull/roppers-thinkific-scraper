@@ -192,11 +192,13 @@ $$\   $$ |$$ |      $$ |     $$  __$$ |$$ |  $$ |$$   ____|$$ |
                     
                     # Wait until lesson content is loaded
                     #main_content = driver.find_element(By.ID, "content-inner")
+                    title_html = driver.find_element(By.CLASS_NAME, "title")
                     main_content = driver.find_element(By.CLASS_NAME, "fr-view")
 
+
                     wait.until(content_finished_loading(main_content))
-                    
-                    html = main_content.get_attribute("innerHTML")
+                    html = title_html
+                    html += main_content.get_attribute("innerHTML")
 
                     save_lesson_as_html(save_dir, chapter_title_stripped, combined_title, '\n'.join([x.strip() for x in html.split('\n')]))
 
