@@ -101,7 +101,9 @@ $$\   $$ |$$ |      $$ |     $$  __$$ |$$ |  $$ |$$   ____|$$ |
             opts = ChromeOptions()
             opts.add_argument("--window-size=1600,900")
             #driver = webdriver.Chrome(options=opts)
-            driver = webdriver.Chrome("/home/kali/roppers-thinkific-scraper/chromedriver")
+            cService = webdriver.ChromeService(executable_path='/home/kali/roppers-thinkific-scraper/chromedriver')
+            driver = webdriver.Chrome(service = cService)
+
 
             driver.implicitly_wait(1)
             driver.get(course_url)
@@ -175,6 +177,7 @@ $$\   $$ |$$ |      $$ |     $$  __$$ |$$ |  $$ |$$   ____|$$ |
                     href = anchor.get_attribute("href")
 
                     title = anchor.find_element(By.CSS_SELECTOR, "div:nth-last-child(1)").text.split('\n')[0].strip()
+                    orig_title = title
                     for char in string.punctuation:
                         title = title.replace(char, '')
                     titleStripped = title.replace(' ', '')
@@ -192,12 +195,12 @@ $$\   $$ |$$ |      $$ |     $$  __$$ |$$ |  $$ |$$   ____|$$ |
                     
                     # Wait until lesson content is loaded
                     #main_content = driver.find_element(By.ID, "content-inner")
-                    title_html = driver.find_element(By.CLASS_NAME, "title")
+                    title_html = driver.find_element(By.CLASS_NAME, "content-item__title")
                     main_content = driver.find_element(By.CLASS_NAME, "fr-view")
 
 
                     wait.until(content_finished_loading(main_content))
-                    html = title_html
+                    html = "<h1>" + orig_title + "</h1>"
                     html += main_content.get_attribute("innerHTML")
 
                     save_lesson_as_html(save_dir, chapter_title_stripped, combined_title, '\n'.join([x.strip() for x in html.split('\n')]))

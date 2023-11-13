@@ -67,7 +67,7 @@ $$\ $$ |  $$ | \$$$$  |$$ | $$ | $$ |$$ |           $$  /        $$\ $$ | $$ | $
                                 markdown_content = pandoc.write(
                                     doc=html,
                                     file=out_file_path,
-                                    format="gfm-raw_html",
+                                    format="gfm",
                                 )
 
                                 
